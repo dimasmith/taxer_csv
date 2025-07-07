@@ -64,17 +64,19 @@ mod test {
 
     #[test]
     fn serialize_complete_record() {
-        let record = TaxerRecord {
-            tax_code: "2121049841".to_string(),
-            date: NaiveDateTime::parse_from_str("2025-07-22 13:24:35", "%Y-%m-%d %H:%M:%S")
-                .unwrap(),
-            comment: "Послуги з розробки".to_string(),
-            amount: 220394.05,
-            operation: "Дохід".to_string(),
-            income_type: "Основний дохід".to_string(),
-            account_name: "ФОП".to_string(),
-            currency_code: "UAH".to_string(),
-        };
+        let date =
+            NaiveDateTime::parse_from_str("2025-07-22 13:24:35", "%Y-%m-%d %H:%M:%S").unwrap();
+        let record = TaxerRecord::builder()
+            .tax_code("2121049841")
+            .date(date)
+            .amount(220394.05)
+            .comment("Послуги з розробки")
+            .operation("Дохід")
+            .income_type("Основний дохід")
+            .account_name("ФОП")
+            .currency_code("UAH")
+            .build()
+            .unwrap();
 
         let buf = vec![];
         let mut w = BufWriter::new(buf);
