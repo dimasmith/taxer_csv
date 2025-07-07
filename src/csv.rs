@@ -1,9 +1,12 @@
+//! Functions to write CSV
+
 use std::{error::Error, io::Write};
 
 use csv::WriterBuilder;
 
 use crate::record::TaxerRecord;
 
+/// Serialize list of taxer records to CSV format suitable for import.
 pub fn serialize_taxer<W>(writer: W, records: &[TaxerRecord]) -> Result<(), Box<dyn Error>>
 where
     W: Write,
@@ -29,14 +32,9 @@ mod test {
 
     #[test]
     fn serialize_single_record() {
-        let record = TaxerRecord {
-            tax_code: "3141592600".to_string(),
-            date: NaiveDateTime::parse_from_str("2025-07-22 13:24:35", "%Y-%m-%d %H:%M:%S")
-                .unwrap(),
-            comment: "Послуги з розробки".to_string(),
-            amount: 220394.05,
-            ..Default::default()
-        };
+        let date =
+            NaiveDateTime::parse_from_str("2025-07-22 13:24:35", "%Y-%m-%d %H:%M:%S").unwrap();
+        let record = TaxerRecord::new("3141592600", date, 220394.05, "Послуги з розробки");
 
         let buf = vec![];
         let mut w = BufWriter::new(buf);
