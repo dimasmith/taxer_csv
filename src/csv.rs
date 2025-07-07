@@ -1,13 +1,23 @@
 //! Functions to write CSV
 
-use std::{error::Error, io::Write};
+use std::io::Write;
 
 use csv::WriterBuilder;
+use thiserror::Error;
 
 use crate::record::TaxerRecord;
 
+#[derive(Debug, Error)]
+pub enum TaxerError {
+    #[error("failed to serialize taxer records. faulty record {record_no}")]
+    Csv {
+        record_no: usize,
+        source: csv::Error,
+    },
+}
+
 /// Serialize list of taxer records to CSV format suitable for import.
-pub fn serialize_taxer<W>(writer: W, records: &[TaxerRecord]) -> Result<(), Box<dyn Error>>
+pub fn serialize_taxer<W>(writer: W, records: &[TaxerRecord]) -> Result<(), TaxerError>
 where
     W: Write,
 {
@@ -15,8 +25,11 @@ where
         .delimiter(b',')
         .has_headers(false)
         .from_writer(writer);
-    for row in records {
-        csv_writer.serialize(row)?;
+    for (idx, record) in records.iter().enumerate() {
+        csv_writer.serialize(record).map_err(|e| TaxerError::Csv {
+            record_no: idx + 1,
+            source: e,
+        })?;
     }
     Ok(())
 }

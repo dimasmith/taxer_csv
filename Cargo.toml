@@ -8,3 +8,4 @@ license-file = "LICENSE"
 chrono = { version = "0.4.41", features = ["serde"] }
 csv = "1.3.1"
 serde = { version = "1.0.219", features = ["derive"] }
+thiserror = "2.0.12"
