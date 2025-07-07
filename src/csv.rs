@@ -1,0 +1,80 @@
+use std::{error::Error, io::Write};
+
+use csv::WriterBuilder;
+
+use crate::record::TaxerRecord;
+
+pub fn serialize_taxer<W>(writer: W, records: &[TaxerRecord]) -> Result<(), Box<dyn Error>>
+where
+    W: Write,
+{
+    let mut csv_writer = WriterBuilder::new()
+        .delimiter(b',')
+        .has_headers(false)
+        .from_writer(writer);
+    for row in records {
+        csv_writer.serialize(row)?;
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use std::io::BufWriter;
+
+    use chrono::NaiveDateTime;
+
+    use crate::TaxerRecord;
+
+    #[test]
+    fn serialize_single_record() {
+        let record = TaxerRecord {
+            tax_code: "3141592600".to_string(),
+            date: NaiveDateTime::parse_from_str("2025-07-22 13:24:35", "%Y-%m-%d %H:%M:%S")
+                .unwrap(),
+            comment: "Послуги з розробки".to_string(),
+            amount: 220394.05,
+            ..Default::default()
+        };
+
+        let buf = vec![];
+        let mut w = BufWriter::new(buf);
+
+        serialize_taxer(&mut w, &[record]).unwrap();
+
+        let buf = w.into_inner().unwrap();
+        let raw_csv = String::from_utf8(buf).unwrap();
+        assert_eq!(
+            raw_csv,
+            "3141592600,22.07.2025 13:24:35,220394.05,Послуги з розробки,,,,\n"
+        );
+    }
+
+    #[test]
+    fn serialize_complete_record() {
+        let record = TaxerRecord {
+            tax_code: "2121049841".to_string(),
+            date: NaiveDateTime::parse_from_str("2025-07-22 13:24:35", "%Y-%m-%d %H:%M:%S")
+                .unwrap(),
+            comment: "Послуги з розробки".to_string(),
+            amount: 220394.05,
+            operation: "Дохід".to_string(),
+            income_type: "Основний дохід".to_string(),
+            account_name: "ФОП".to_string(),
+            currency_code: "UAH".to_string(),
+        };
+
+        let buf = vec![];
+        let mut w = BufWriter::new(buf);
+
+        serialize_taxer(&mut w, &[record]).unwrap();
+
+        let buf = w.into_inner().unwrap();
+        let raw_csv = String::from_utf8(buf).unwrap();
+        assert_eq!(
+            raw_csv,
+            "2121049841,22.07.2025 13:24:35,220394.05,Послуги з розробки,Дохід,Основний дохід,ФОП,UAH\n"
+        );
+    }
+}
