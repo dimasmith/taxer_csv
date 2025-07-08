@@ -1,9 +1,9 @@
 //! Data records to serialize to Taxer format.
 
+use crate::value::{Amount, TaxCode};
 use chrono::NaiveDateTime;
 use serde::{Serialize, Serializer};
 use thiserror::Error;
-use crate::value::Amount;
 
 #[derive(Debug, Error)]
 pub enum InvalidRecord {
@@ -22,7 +22,7 @@ pub enum InvalidRecord {
 /// Taxer record with all supported fields.
 #[derive(Debug, Clone, Serialize)]
 pub struct TaxerRecord {
-    pub tax_code: String,
+    pub tax_code: TaxCode,
     #[serde(serialize_with = "serialize_date")]
     pub date: NaiveDateTime,
     pub amount: Amount,
@@ -35,16 +35,16 @@ pub struct TaxerRecord {
 
 impl TaxerRecord {
     /// Create record with required data. Other fields will be empty.
-    pub fn new_unchecked(
-        tax_code: impl Into<String>,
+    pub fn new(
+        tax_code: TaxCode,
         date: NaiveDateTime,
-        amount: f64,
+        amount: Amount,
         comment: impl Into<String>,
     ) -> Self {
         TaxerRecord {
-            tax_code: tax_code.into(),
+            tax_code,
             date,
-            amount: Amount::new(amount).unwrap(),
+            amount,
             comment: comment.into(),
             account_name: String::default(),
             currency_code: "UAH".to_string(),
@@ -62,7 +62,7 @@ impl TaxerRecord {
 /// Builder for TaxerRecord.
 #[derive(Debug, Default)]
 pub struct TaxerRecordBuilder {
-    tax_code: Option<String>,
+    tax_code: Option<TaxCode>,
     date: Option<NaiveDateTime>,
     amount: Option<Amount>,
     comment: Option<String>,
@@ -73,9 +73,15 @@ pub struct TaxerRecordBuilder {
 }
 
 impl TaxerRecordBuilder {
-    pub fn tax_code(mut self, tax_code: impl Into<String>) -> Self {
-        self.tax_code = Some(tax_code.into());
+    pub fn tax_code(mut self, tax_code: TaxCode) -> Self {
+        self.tax_code = Some(tax_code);
         self
+    }
+
+    pub fn tax_code_raw(mut self, tax_code: impl Into<String>) -> Result<TaxerRecordBuilder, InvalidRecord> {
+        let raw_code = tax_code.into();
+        self.tax_code = Some(TaxCode::new(raw_code).map_err(|e| InvalidRecord::InvalidTaxCode(e.invalid_code))?);
+        Ok(self)
     }
     pub fn date(mut self, date: NaiveDateTime) -> Self {
         self.date = Some(date);
@@ -111,21 +117,10 @@ impl TaxerRecordBuilder {
         self
     }
     pub fn build(self) -> Result<TaxerRecord, InvalidRecord> {
-        let amount = self.amount.ok_or(InvalidRecord::MissingAmount)?;
-
-        let tax_code = self.tax_code.ok_or(InvalidRecord::MissingTaxCode)?;
-        let tax_code = tax_code.trim();
-        if tax_code.len() != 8 && tax_code.len() != 10 {
-            return Err(InvalidRecord::InvalidTaxCode(tax_code.to_string()))
-        }
-        if tax_code.chars().any(|c| !c.is_digit(10)) {
-            return Err(InvalidRecord::InvalidTaxCode(tax_code.to_string()));
-        }
-
         Ok(TaxerRecord {
-            tax_code: tax_code.to_string(),
+            tax_code: self.tax_code.ok_or(InvalidRecord::MissingTaxCode)?,
             date: self.date.ok_or(InvalidRecord::MissingDate)?,
-            amount,
+            amount: self.amount.ok_or(InvalidRecord::MissingAmount)?,
             comment: self.comment.unwrap_or_default(),
             operation: self.operation.unwrap_or_default(),
             income_type: self.income_type.unwrap_or_default(),
