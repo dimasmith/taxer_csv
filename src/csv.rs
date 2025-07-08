@@ -47,7 +47,7 @@ mod test {
     fn serialize_single_record() {
         let date =
             NaiveDateTime::parse_from_str("2025-07-22 13:24:35", "%Y-%m-%d %H:%M:%S").unwrap();
-        let record = TaxerRecord::new("3141592600", date, 220394.05, "Послуги з розробки");
+        let record = TaxerRecord::new_unchecked("3141592600", date, 220394.05, "Послуги з розробки");
 
         let buf = vec![];
         let mut w = BufWriter::new(buf);
@@ -58,7 +58,7 @@ mod test {
         let raw_csv = String::from_utf8(buf).unwrap();
         assert_eq!(
             raw_csv,
-            "3141592600,22.07.2025 13:24:35,220394.05,Послуги з розробки,,,,\n"
+            "3141592600,22.07.2025 13:24:35,220394.05,Послуги з розробки,,,,UAH\n"
         );
     }
 
@@ -69,7 +69,7 @@ mod test {
         let record = TaxerRecord::builder()
             .tax_code("2121049841")
             .date(date)
-            .amount(220394.05)
+            .amount_raw(220394.05).unwrap()
             .comment("Послуги з розробки")
             .operation("Дохід")
             .income_type("Основний дохід")
