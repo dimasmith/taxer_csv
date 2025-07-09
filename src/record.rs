@@ -78,9 +78,14 @@ impl TaxerRecordBuilder {
         self
     }
 
-    pub fn tax_code_raw(mut self, tax_code: impl Into<String>) -> Result<TaxerRecordBuilder, InvalidRecord> {
+    pub fn tax_code_raw(
+        mut self,
+        tax_code: impl Into<String>,
+    ) -> Result<TaxerRecordBuilder, InvalidRecord> {
         let raw_code = tax_code.into();
-        self.tax_code = Some(TaxCode::new(raw_code).map_err(|e| InvalidRecord::InvalidTaxCode(e.invalid_code))?);
+        self.tax_code = Some(
+            TaxCode::new(raw_code).map_err(|e| InvalidRecord::InvalidTaxCode(e.invalid_code))?,
+        );
         Ok(self)
     }
     pub fn date(mut self, date: NaiveDateTime) -> Self {
@@ -93,7 +98,8 @@ impl TaxerRecordBuilder {
     }
 
     pub fn amount_raw(mut self, amount: f64) -> Result<Self, InvalidRecord> {
-        self.amount = Some(Amount::new(amount).map_err(|_| InvalidRecord::InvalidAmount(amount))?);
+        self.amount =
+            Some(Amount::new(amount).map_err(|e| InvalidRecord::InvalidAmount(e.invalid_amount))?);
         Ok(self)
     }
     pub fn comment(mut self, comment: impl Into<String>) -> Self {
