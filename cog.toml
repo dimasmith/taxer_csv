@@ -16,12 +16,12 @@ pre_bump_hooks = [
   "cargo clippy",
   "cargo fmt --check",
   "echo 'bumping from {{latest|0.0.0}} to {{version|0.0.1}}'",
-  "cargo bump {{version|0.0.1}}",
+  "cargo set-version {{version|0.0.1}}",
   "git add Cargo.toml Cargo.lock",
   "cog commit chore 'release {{version|0.0.1}}' release",
 ]
 post_bump_hooks = [
-  "cargo bump {{version|0.0.1+patch}}-alpha.0",
+  "cargo set-version {{version|0.0.1+patch}}-alpha.0",
   "git add Cargo.toml Cargo.lock",
   "cog commit chore 'prepare development version {{version|0.0.1+patch}}' release"
 ]

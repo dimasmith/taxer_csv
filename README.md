@@ -18,7 +18,7 @@ Release steps:
 6. Commit changes with message `chore(release): start version x.y.z development`.
 7. Push changes to the `main` branch.
 
-You can automate the process if you have `cocogitto` and `cargo-bump` installed.
+You can automate the process if you have `cocogitto` and `cargo-edit` installed.
 
 ```bash
 git checkout main
