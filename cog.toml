@@ -16,7 +16,10 @@ pre_bump_hooks = [
   "echo 'bumping from {{latest|0.0.0}} to {{version|0.0.1}}'",
   "cargo bump {{version|0.0.1}}",
 ]
-post_bump_hooks = []
+post_bump_hooks = [
+  "cargo bump {{version|0.0.1}}-alpha.0",
+  "cog commit chore 'prepare development version {{version}}' release"
+]
 pre_package_bump_hooks = []
 post_package_bump_hooks = []
 
